@@ -229,3 +229,37 @@ test('sending empty group message returns validation errors', function () {
 
     $response->assertSessionHasErrors(['body']);
 });
+
+test('sending group message dispatches GroupMessageSent event with correct payload', function () {
+    \Illuminate\Support\Facades\Event::fake();
+
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $group = Group::create([
+        'name' => 'Keluarga Cemara',
+        'created_by' => $user->id,
+    ]);
+    $group->members()->attach([$user->id, $otherUser->id]);
+
+    $this->actingAs($user)
+        ->post(route('groups.messages.store', $group->id), [
+            'body' => 'Hai guys, apa kabar?',
+        ]);
+
+    \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\GroupMessageSent::class, function ($event) use ($group, $user) {
+        $this->assertEquals($group->id, $event->message->group_id);
+        $this->assertEquals($user->id, $event->message->sender_id);
+        $this->assertEquals('Hai guys, apa kabar?', $event->message->body);
+
+        $channels = $event->broadcastOn();
+        $this->assertCount(1, $channels);
+        $this->assertEquals('private-groups.' . $group->id, $channels[0]->name);
+
+        $payload = $event->broadcastWith();
+        $this->assertEquals($user->name, $payload['sender_name']);
+        $this->assertEquals('Hai guys, apa kabar?', $payload['body']);
+
+        return true;
+    });
+});

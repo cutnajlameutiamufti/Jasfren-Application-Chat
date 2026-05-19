@@ -92,6 +92,9 @@ class GroupController extends Controller
             'body' => $request->body,
         ]);
 
+        // Broadcast pesan secara real-time ke anggota grup lainnya
+        broadcast(new \App\Events\GroupMessageSent($message))->toOthers();
+
         return redirect()->route('groups.show', $group->id);
     }
 }
