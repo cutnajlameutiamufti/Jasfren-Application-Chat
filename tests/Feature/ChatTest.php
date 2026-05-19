@@ -74,3 +74,32 @@ test('adding existing username redirects to chat room', function () {
 
     $response->assertRedirect(route('chats.show', $otherUser->username));
 });
+
+test('authenticated users can access the chat room page and view messages', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    // Create some messages between them
+    $msg1 = Message::create([
+        'sender_id' => $user->id,
+        'receiver_id' => $otherUser->id,
+        'body' => 'Hai, apa kabar?',
+        'is_read' => true,
+    ]);
+
+    $msg2 = Message::create([
+        'sender_id' => $otherUser->id,
+        'receiver_id' => $user->id,
+        'body' => 'Kabar baik! Kamu?',
+        'is_read' => false,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('chats.show', $otherUser->username));
+
+    $response->assertSuccessful();
+    $response->assertSee($otherUser->name);
+    $response->assertSee($otherUser->username);
+    $response->assertSee('Hai, apa kabar?');
+    $response->assertSee('Kabar baik! Kamu?');
+});
