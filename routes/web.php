@@ -12,6 +12,8 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+use App\Http\Controllers\GroupController;
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
     Route::get('/chats/create', [ChatController::class, 'create'])->name('chats.create');
@@ -19,9 +21,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chats/{username}', [ChatController::class, 'show'])->name('chats.show');
     Route::post('/chats/{username}/messages', [ChatController::class, 'sendMessage'])->name('chats.messages.store');
 
-    Route::get('/groups', function () {
-        return view('groups.index');
-    })->name('groups.index');
+    Route::get('/groups', [GroupController::class, 'index'])->name('groups.index');
+    Route::get('/groups/create', [GroupController::class, 'create'])->name('groups.create');
+    Route::post('/groups', [GroupController::class, 'store'])->name('groups.store');
+    Route::get('/groups/{id}', [GroupController::class, 'show'])->name('groups.show');
 });
 
 Route::middleware('auth')->group(function () {

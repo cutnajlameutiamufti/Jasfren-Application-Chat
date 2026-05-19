@@ -28,4 +28,9 @@ class Group extends Model
     {
         return $this->hasMany(GroupMessage::class);
     }
+
+    public function latestMessage()
+    {
+        return $this->hasOne(GroupMessage::class)->latestOfMany();
+    }
 }
