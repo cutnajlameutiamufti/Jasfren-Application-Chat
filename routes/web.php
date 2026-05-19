@@ -25,6 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/groups/create', [GroupController::class, 'create'])->name('groups.create');
     Route::post('/groups', [GroupController::class, 'store'])->name('groups.store');
     Route::get('/groups/{id}', [GroupController::class, 'show'])->name('groups.show');
+    Route::post('/groups/{id}/messages', [GroupController::class, 'sendMessage'])->name('groups.messages.store');
 });
 
 Route::middleware('auth')->group(function () {

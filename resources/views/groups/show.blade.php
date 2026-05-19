@@ -158,9 +158,9 @@
                         </div>
                     </div>
 
-                    <!-- Area Input Pesan (Form Placeholder) -->
+                    <!-- Area Input Pesan -->
                     <div class="px-6 py-4 bg-white border-t border-gray-100 shrink-0">
-                        <form action="#" method="POST" class="flex items-center space-x-3">
+                        <form action="{{ route('groups.messages.store', $activeGroup->id) }}" method="POST" class="flex items-center space-x-3">
                             @csrf
                             <!-- Attachment Button (Visual Placeholder) -->
                             <button type="button" class="p-2.5 text-gray-400 hover:text-blue-600 rounded-full hover:bg-gray-50 transition-colors duration-200 shrink-0">

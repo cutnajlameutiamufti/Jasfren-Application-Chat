@@ -72,4 +72,26 @@ class GroupController extends Controller
 
         return view('groups.show', compact('activeGroup', 'groups', 'messages'));
     }
+
+    public function sendMessage(Request $request, $id)
+    {
+        $group = Group::findOrFail($id);
+
+        // Keamanan: pastikan user aktif adalah anggota grup ini
+        if (!$group->members->contains(auth()->id())) {
+            abort(403, 'Anda bukan anggota grup ini.');
+        }
+
+        $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        $message = \App\Models\GroupMessage::create([
+            'group_id' => $group->id,
+            'sender_id' => auth()->id(),
+            'body' => $request->body,
+        ]);
+
+        return redirect()->route('groups.show', $group->id);
+    }
 }

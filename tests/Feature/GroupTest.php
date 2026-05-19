@@ -166,3 +166,66 @@ test('group members can access group chat room and view messages', function () {
     $response->assertSee($otherUser->name);
     $response->assertSee('Halo tim! Semangat ya!');
 });
+
+test('group members can send group messages successfully', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $group = Group::create([
+        'name' => 'Keluarga Cemara',
+        'created_by' => $user->id,
+    ]);
+    $group->members()->attach([$user->id, $otherUser->id]);
+
+    $response = $this->actingAs($user)
+        ->post(route('groups.messages.store', $group->id), [
+            'body' => 'Hallo semua, saya baru bergabung!',
+        ]);
+
+    $response->assertRedirect(route('groups.show', $group->id));
+
+    $this->assertDatabaseHas('group_messages', [
+        'group_id' => $group->id,
+        'sender_id' => $user->id,
+        'body' => 'Hallo semua, saya baru bergabung!',
+    ]);
+});
+
+test('non members cannot send group messages and get 403', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $group = Group::create([
+        'name' => 'Keluarga Cemara',
+        'created_by' => $otherUser->id,
+    ]);
+    $group->members()->attach($otherUser->id);
+
+    $response = $this->actingAs($user)
+        ->post(route('groups.messages.store', $group->id), [
+            'body' => 'Bolehkah saya ikut?',
+        ]);
+
+    $response->assertStatus(403);
+    $this->assertDatabaseMissing('group_messages', [
+        'group_id' => $group->id,
+        'body' => 'Bolehkah saya ikut?',
+    ]);
+});
+
+test('sending empty group message returns validation errors', function () {
+    $user = User::factory()->create();
+
+    $group = Group::create([
+        'name' => 'Keluarga Cemara',
+        'created_by' => $user->id,
+    ]);
+    $group->members()->attach($user->id);
+
+    $response = $this->actingAs($user)
+        ->post(route('groups.messages.store', $group->id), [
+            'body' => '',
+        ]);
+
+    $response->assertSessionHasErrors(['body']);
+});
