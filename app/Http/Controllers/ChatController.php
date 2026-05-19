@@ -40,6 +40,13 @@ class ChatController extends Controller
     public function show($username)
     {
         $user = User::where('username', $username)->firstOrFail();
+
+        // Tandai semua pesan yang dikirim oleh user ini ke auth user sebagai telah dibaca
+        Message::where('sender_id', $user->id)
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         $chats = $this->getChatList();
 
         // Ambil semua pesan percakapan antara auth user dan user ini

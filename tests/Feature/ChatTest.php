@@ -151,3 +151,43 @@ test('sending message dispatches MessageSent broadcast event', function () {
                $event->message->body === 'Tes broadcast!';
     });
 });
+
+test('opening chat room marks unread messages from that user as read', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $thirdUser = User::factory()->create();
+
+    // Pesan masuk belum dibaca dari otherUser (harus diupdate jadi read)
+    $msgIncoming = Message::create([
+        'sender_id' => $otherUser->id,
+        'receiver_id' => $user->id,
+        'body' => 'Hai, apa kabar?',
+        'is_read' => false,
+    ]);
+
+    // Pesan terkirim belum dibaca dari user ke otherUser (harus tetap false)
+    $msgOutgoing = Message::create([
+        'sender_id' => $user->id,
+        'receiver_id' => $otherUser->id,
+        'body' => 'Hai juga!',
+        'is_read' => false,
+    ]);
+
+    // Pesan dari thirdUser (harus tetap false)
+    $msgOther = Message::create([
+        'sender_id' => $thirdUser->id,
+        'receiver_id' => $user->id,
+        'body' => 'Halo dari luar obrolan!',
+        'is_read' => false,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('chats.show', $otherUser->username));
+
+    $response->assertSuccessful();
+
+    // Verifikasi status di database
+    $this->assertTrue((bool) $msgIncoming->refresh()->is_read);
+    $this->assertFalse((bool) $msgOutgoing->refresh()->is_read);
+    $this->assertFalse((bool) $msgOther->refresh()->is_read);
+});
