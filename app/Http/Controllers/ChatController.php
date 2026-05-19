@@ -52,4 +52,33 @@ class ChatController extends Controller
 
         return view('chats.index', compact('chats'));
     }
+
+    public function create()
+    {
+        return view('chats.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|exists:users,username',
+        ], [
+            'username.exists' => 'Username tidak ditemukan.',
+        ]);
+
+        $username = $request->username;
+
+        if ($username === auth()->user()->username) {
+            return back()->withErrors(['username' => 'Anda tidak bisa memulai chat dengan diri sendiri.']);
+        }
+
+        return redirect()->route('chats.show', $username);
+    }
+
+    public function show($username)
+    {
+        $user = User::where('username', $username)->firstOrFail();
+
+        return view('chats.show', compact('user'));
+    }
 }

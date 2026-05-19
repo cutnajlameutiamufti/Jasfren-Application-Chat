@@ -30,3 +30,47 @@ test('authenticated users can access personal chats and see chat list', function
     $response->assertSee($otherUser->name);
     $response->assertSee('Halo kawan!');
 });
+
+test('authenticated users can access the create chat page', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->get(route('chats.create'));
+
+    $response->assertSuccessful();
+    $response->assertSee('Mulai Chat Baru');
+});
+
+test('adding non-existent username returns validation error', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post(route('chats.store'), [
+            'username' => 'nonexistentuser',
+        ]);
+
+    $response->assertSessionHasErrors('username');
+});
+
+test('adding own username returns validation error', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post(route('chats.store'), [
+            'username' => $user->username,
+        ]);
+
+    $response->assertSessionHasErrors('username');
+});
+
+test('adding existing username redirects to chat room', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post(route('chats.store'), [
+            'username' => $otherUser->username,
+        ]);
+
+    $response->assertRedirect(route('chats.show', $otherUser->username));
+});

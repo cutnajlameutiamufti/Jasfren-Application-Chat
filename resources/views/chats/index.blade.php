@@ -11,7 +11,7 @@
                             <h1 class="text-xl font-bold text-gray-900">Chat Personal</h1>
                             <p class="text-xs text-gray-500">Mulai obrolan dengan temanmu</p>
                         </div>
-                        <a href="#" class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors duration-200" title="Tambah Chat Baru">
+                        <a href="{{ route('chats.create') }}" class="p-2 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors duration-200" title="Tambah Chat Baru">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -83,7 +83,7 @@
                                 </div>
                                 <h3 class="text-sm font-semibold text-gray-900">Belum Ada Obrolan</h3>
                                 <p class="text-xs text-gray-500 mt-1 max-w-[200px]">Mulai obrolan baru dengan mencari teman berdasarkan username.</p>
-                                <a href="#" class="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 shadow-sm transition-all duration-200">
+                                <a href="{{ route('chats.create') }}" class="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 shadow-sm transition-all duration-200">
                                     Tambah Chat Baru
                                 </a>
                             </div>
