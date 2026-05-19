@@ -103,3 +103,33 @@ test('authenticated users can access the chat room page and view messages', func
     $response->assertSee('Hai, apa kabar?');
     $response->assertSee('Kabar baik! Kamu?');
 });
+
+test('authenticated users can send message to another user', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post(route('chats.messages.store', $otherUser->username), [
+            'body' => 'Pesan baru dari saya!',
+        ]);
+
+    $response->assertRedirect(route('chats.show', $otherUser->username));
+    
+    $this->assertDatabaseHas('messages', [
+        'sender_id' => $user->id,
+        'receiver_id' => $otherUser->id,
+        'body' => 'Pesan baru dari saya!',
+    ]);
+});
+
+test('sending empty message returns validation error', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post(route('chats.messages.store', $otherUser->username), [
+            'body' => '',
+        ]);
+
+    $response->assertSessionHasErrors('body');
+});

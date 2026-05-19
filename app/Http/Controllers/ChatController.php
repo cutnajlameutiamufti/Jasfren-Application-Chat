@@ -51,6 +51,24 @@ class ChatController extends Controller
         return view('chats.show', compact('user', 'chats', 'messages'));
     }
 
+    public function sendMessage(Request $request, $username)
+    {
+        $receiver = User::where('username', $username)->firstOrFail();
+
+        $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        Message::create([
+            'sender_id' => auth()->id(),
+            'receiver_id' => $receiver->id,
+            'body' => $request->body,
+            'is_read' => false,
+        ]);
+
+        return redirect()->route('chats.show', $username);
+    }
+
     private function getChatList()
     {
         $authId = auth()->id();
