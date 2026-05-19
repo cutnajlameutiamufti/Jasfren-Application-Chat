@@ -132,35 +132,37 @@
                     </div>
 
                     <!-- Area Pesan (Scrollable) -->
-                    <div class="flex-1 overflow-y-auto p-6 space-y-4">
-                        @forelse($messages as $msg)
-                            @php
-                                $isMe = $msg->sender_id === auth()->id();
-                            @endphp
-                            
-                            <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }} animate-fade-in">
-                                <div class="max-w-[70%] lg:max-w-[60%] flex flex-col {{ $isMe ? 'items-end' : 'items-start' }}">
-                                    <!-- Bubble -->
-                                    <div class="px-4 py-2.5 rounded-2xl shadow-sm text-sm {{ $isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none' }}">
-                                        {{ $msg->body }}
+                    <div id="message-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <div id="messages-list" class="space-y-4">
+                            @forelse($messages as $msg)
+                                @php
+                                    $isMe = $msg->sender_id === auth()->id();
+                                @endphp
+                                
+                                <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }} animate-fade-in">
+                                    <div class="max-w-[70%] lg:max-w-[60%] flex flex-col {{ $isMe ? 'items-end' : 'items-start' }}">
+                                        <!-- Bubble -->
+                                        <div class="px-4 py-2.5 rounded-2xl shadow-sm text-sm {{ $isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none' }}">
+                                            {{ $msg->body }}
+                                        </div>
+                                        <!-- Time -->
+                                        <span class="text-[10px] text-gray-400 mt-1.5 px-1">
+                                            {{ $msg->created_at->format('H:i') }}
+                                        </span>
                                     </div>
-                                    <!-- Time -->
-                                    <span class="text-[10px] text-gray-400 mt-1.5 px-1">
-                                        {{ $msg->created_at->format('H:i') }}
-                                    </span>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="flex flex-col items-center justify-center h-full text-center p-8">
-                                <div class="w-16 h-16 bg-blue-100/40 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                    </svg>
+                            @empty
+                                <div class="flex flex-col items-center justify-center h-full text-center p-8">
+                                    <div class="w-16 h-16 bg-blue-100/40 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-gray-900">Mulai Percakapan</h3>
+                                    <p class="text-xs text-gray-500 mt-1 max-w-xs">Kirim pesan pertama untuk memulai obrolan akrab dengan {{ $user->name }}!</p>
                                 </div>
-                                <h3 class="text-sm font-bold text-gray-900">Mulai Percakapan</h3>
-                                <p class="text-xs text-gray-500 mt-1 max-w-xs">Kirim pesan pertama untuk memulai obrolan akrab dengan {{ $user->name }}!</p>
-                            </div>
-                        @endforelse
+                            @endforelse
+                        </div>
                     </div>
 
                     <!-- Area Input Pesan (Form Placeholder) -->
@@ -192,4 +194,54 @@
             </div>
         </div>
     </div>
+
+    <!-- Script Real-Time Laravel Echo -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('message-container');
+            const listEl = document.getElementById('messages-list');
+            
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Daftarkan listener Echo
+            if (window.Echo) {
+                const authUserId = @json(auth()->id());
+                const chatUserId = @json($user->id);
+
+                window.Echo.private(`chat.user.${authUserId}`)
+                    .listen('MessageSent', (e) => {
+                        // Hanya tampilkan jika dikirim oleh lawan bicara yang aktif saat ini
+                        if (parseInt(e.sender_id) === parseInt(chatUserId)) {
+                            const messageHtml = `
+                                <div class="flex justify-start animate-fade-in">
+                                    <div class="max-w-[70%] lg:max-w-[60%] flex flex-col items-start">
+                                        <!-- Bubble -->
+                                        <div class="px-4 py-2.5 rounded-2xl shadow-sm text-sm bg-white text-gray-800 border border-gray-100 rounded-tl-none">
+                                            ${e.body}
+                                        </div>
+                                        <!-- Time -->
+                                        <span class="text-[10px] text-gray-400 mt-1.5 px-1">
+                                            ${e.created_at}
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+
+                            if (listEl) {
+                                // Hapus empty state jika ada
+                                const emptyState = listEl.querySelector('.text-center');
+                                if (emptyState) {
+                                    emptyState.remove();
+                                }
+                                
+                                listEl.insertAdjacentHTML('beforeend', messageHtml);
+                                container.scrollTop = container.scrollHeight;
+                            }
+                        }
+                    });
+            }
+        });
+    </script>
 </x-app-layout>

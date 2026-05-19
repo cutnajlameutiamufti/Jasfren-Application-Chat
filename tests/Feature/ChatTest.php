@@ -133,3 +133,21 @@ test('sending empty message returns validation error', function () {
 
     $response->assertSessionHasErrors('body');
 });
+
+test('sending message dispatches MessageSent broadcast event', function () {
+    Illuminate\Support\Facades\Event::fake();
+
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post(route('chats.messages.store', $otherUser->username), [
+            'body' => 'Tes broadcast!',
+        ]);
+
+    Illuminate\Support\Facades\Event::assertDispatched(App\Events\MessageSent::class, function ($event) use ($user, $otherUser) {
+        return $event->message->sender_id === $user->id &&
+               $event->message->receiver_id === $otherUser->id &&
+               $event->message->body === 'Tes broadcast!';
+    });
+});

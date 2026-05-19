@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Message;
+use App\Events\MessageSent;
 
 class ChatController extends Controller
 {
@@ -59,12 +60,15 @@ class ChatController extends Controller
             'body' => 'required|string',
         ]);
 
-        Message::create([
+        $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $receiver->id,
             'body' => $request->body,
             'is_read' => false,
         ]);
+
+        // Dispatch broadcast event
+        MessageSent::dispatch($message);
 
         return redirect()->route('chats.show', $username);
     }
